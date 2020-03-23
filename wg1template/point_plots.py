@@ -114,9 +114,9 @@ class DataPointsPlot:
             elif component.style == 'box':
                 ax.bar(
                     component.data.x_values,
-                    2 * component.data.y_errors,
+                    component.data.y_errors[0]+component.data.y_errors[1],
                     width=2 * component.data.x_errors,
-                    bottom=component.data.y_values - component.data.y_errors,
+                    bottom=component.data.y_values - component.data.y_errors[0],
                     label=component.label,
                     color=component.color,
                     alpha=0.5

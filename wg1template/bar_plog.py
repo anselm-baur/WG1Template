@@ -17,10 +17,10 @@ import wg1template.plot_style as plot_style
 plot_style.set_matplotlibrc_params()
 
 
-class HistVariable:
+class BarVariable:
     """
     Helper class with properties describing the variable which will be plotted
-    with HistogramPlot classes.
+    with BarPlot classes.
     """
 
     def __init__(self,
@@ -31,7 +31,7 @@ class HistVariable:
                  unit: Union[str, None] = None,
                  use_logspace: bool = False):
         """
-        HistVariable constructor.
+        BarVariable constructor.
         :param df_label: Label of the variable for the column in a pandas
         dataframe.
         :param n_bins: Number of bins used in the histogram.
@@ -128,7 +128,7 @@ class HistVariable:
         return self._use_logspace
 
 
-class HistComponent:
+class BarComponent:
     """
     Helper class for handling components of histograms.
     """
@@ -139,10 +139,9 @@ class HistComponent:
                  weights: Union[np.ndarray, None],
                  histtype: Union[str, None],
                  color: Union[str, None],
-                 ls: str,
-                 label_uncert: [str] = ""):
+                 ls: str):
         """
-        HistComponent constructor.
+        BarComponent constructor.
         :param label: Component label for the histogram.
         :param data: Data to be histogramed.
         :param weights: Weights for the events in data.
@@ -153,7 +152,6 @@ class HistComponent:
         """
         self._label = label
         self._data = data
-        self._label_uncert = label_uncert
         self._weights = weights
         self._histtype = histtype
         self._color = color
@@ -167,12 +165,7 @@ class HistComponent:
 
     @property
     def data(self):
-       return self._data
- 
-    @property
-    def label_uncert(self):
-       return self._label_uncert
-
+        return self._data
 
     @property
     def weights(self):
@@ -199,7 +192,7 @@ class HistComponent:
         return self._max
 
 
-class HistogramPlot:
+class BarPlot:
     """
     Base class for histogram plots.
     """
@@ -207,7 +200,7 @@ class HistogramPlot:
     def __init__(self,
                  variable: HistVariable):
         """
-        HistogramPlot constructor.
+        BarPlot constructor.
         :param variable: A HistVariable describing the variable to be
         histogramed.
         """
@@ -239,6 +232,7 @@ class HistogramPlot:
         :param color: Color of the histogram component.
         :param ls: Linestyle of the histogram component.
         """
+
         if isinstance(weights, float):
             weights = np.ones(len(data)) * weights
 
@@ -258,7 +252,7 @@ class HistogramPlot:
 
         if comp_type in ['single', 'stacked']:
             self._mc_components[comp_type].append(
-                HistComponent(label=label,
+                BarComponent(label=label,
                               data=data,
                               weights=weights,
                               histtype=histtype,
@@ -337,11 +331,11 @@ class HistogramPlot:
         return self._bin_width
 
 
-class SimpleHistogramPlot(HistogramPlot):
+class SimpleBarPlot(BarPlot):
     def __init__(self,
                  variable: HistVariable):
         """
-        HistogramPlot constructor.
+        BarPlot constructor.
         :param variable: A HistVariable describing the variable to be
         histogramed.
         """
@@ -353,7 +347,7 @@ class SimpleHistogramPlot(HistogramPlot):
                 legend_inside: bool = True,
                 yaxis_scale=1.3,
                 normed: bool = False,
-                ylabel="Events",
+                ylabel=r'$\varepsilon$',
                 hide_labels: bool = False) -> plt.axis:
         """
         Plots the component on a given matplotlib.pyplot.axis
@@ -407,11 +401,11 @@ class SimpleHistogramPlot(HistogramPlot):
         return ax
 
 
-class StackedHistogramPlot(HistogramPlot):
+class StackedBarPlot(BarPlot):
     def __init__(self,
                  variable: HistVariable):
         """
-        HistogramPlot constructor.
+        BarPlot constructor.
         :param variable: A HistVariable describing the variable to be
         histogramed.
         """
@@ -451,11 +445,11 @@ class StackedHistogramPlot(HistogramPlot):
         return ax
 
 
-class DataMCHistogramPlot(HistogramPlot):
+class DataMCBarPlot(BarPlot):
     def __init__(self,
                  variable: HistVariable):
         """
-        HistogramPlot constructor.
+        BarPlot constructor.
         :param variable: A HistVariable describing the variable to be
         histogramed.
         """
@@ -463,28 +457,25 @@ class DataMCHistogramPlot(HistogramPlot):
 
     def add_data_component(self,
                            label: str,
-                           data: Union[pd.DataFrame, pd.Series, np.ndarray], 
-                           color: [str] = "black"):
+                           data: Union[pd.DataFrame, pd.Series, np.ndarray], ):
         if isinstance(data, pd.Series):
             data = data.values
 
         if isinstance(data, pd.DataFrame):
             data = data[self._variable.df_label].values
 
-        self._data_component = HistComponent(
+        self._data_component = BarComponent(
             label=label,
             data=data,
             weights=None,
             histtype=None,
-            color=color,
+            color=None,
             ls="",
         )
 
     def add_mc_component(self,
                          label: str,
                          data: Union[pd.DataFrame, pd.Series, np.ndarray],
-                         label_uncert: [str] = 'MC stat. unc.',
-                         histtype: [str] = "",
                          weights: Union[str, pd.Series, np.ndarray, None] = None,
                          color: str = None,
                          ls: str = 'solid'):
@@ -507,12 +498,11 @@ class DataMCHistogramPlot(HistogramPlot):
         assert len(data) == len(weights)
 
         self._mc_components["MC"].append(
-            HistComponent(
+            BarComponent(
                 label=label,
-                label_uncert=label_uncert,
                 data=data,
                 weights=weights,
-                histtype=histtype,
+                histtype=None,
                 color=color,
                 ls=ls,
             )
@@ -522,7 +512,6 @@ class DataMCHistogramPlot(HistogramPlot):
                 sum_color=plot_style.KITColors.kit_purple,
                 draw_legend: bool = True,
                 legend_inside: bool = True,
-                plot_pull: bool = False,
                 ):
         bin_edges, bin_mids, bin_width = self._get_bin_edges()
 
@@ -540,69 +529,43 @@ class DataMCHistogramPlot(HistogramPlot):
 
         hdata, _ = np.histogram(self._data_component.data, bins=bin_edges)
 
-
         if style.lower() == "stacked":
-            for comp in self._mc_components['MC']:
-                if comp.histtype == "": 
-                    ax1.hist(x=comp.data,
-                             bins=bin_edges,
-                             weights=comp.weights,
-                             stacked=True,
-                             edgecolor="black",
-                             lw=0.3,
-                             color=comp.color,
-                             label=comp.label,
-                             histtype='stepfilled'
-                             )
-                    
-                    ax1.bar(
-                           x=bin_mids,
-                           height=2 * np.sqrt(sum_w2),
-                           width=self.bin_width,
-                           bottom=sum_w - np.sqrt(sum_w2),
-                           color="grey",
-                           hatch="///////",
-                           fill=False,
-                           lw=0,
-                           label=comp.label_uncert
-                        )   
-                if comp.histtype == 'step': 
-                    ax1.hist(x=comp.data,
-                             bins=bin_edges,
-                             weights=comp.weights,
-                             stacked=True,
-                             edgecolor=comp.color,
-                             lw=1.3,
-                             color=comp.color,
-                             label=comp.label,
-                             histtype='step'
-                             )
-                    
-                    ax1.bar(
-                           x=bin_mids,
-                           height=2 * np.sqrt(sum_w2),
-                           width=self.bin_width,
-                           bottom=sum_w - np.sqrt(sum_w2),
-                           color="blue",
-                           edgecolor="grey",
-                           hatch="///////",
-                           fill=False,
-                           lw=0,
-                           label=comp.label_uncert
-                        )
+            ax1.hist(x=[comp.data for comp in self._mc_components['MC']],
+                     bins=bin_edges,
+                     weights=[comp.weights for comp in self._mc_components['MC']],
+                     stacked=True,
+                     edgecolor="black",
+                     lw=0.3,
+                     color=[comp.color for comp in self._mc_components['MC']],
+                     label=[comp.label for comp in self._mc_components['MC']],
+                     histtype='stepfilled'
+                     )
+
+            ax1.bar(
+                x=bin_mids,
+                height=2 * np.sqrt(sum_w2),
+                width=self.bin_width,
+                bottom=sum_w - np.sqrt(sum_w2),
+                color="black",
+                hatch="///////",
+                fill=False,
+                lw=0,
+                label="MC stat. unc."
+            )
+
         if style.lower() == "summed":
             ax1.bar(
                 x=bin_mids,
                 height=2 * np.sqrt(sum_w2),
                 width=self.bin_width,
-                bottom=(sum_w - np.sqrt(sum_w2)),
+                bottom=sum_w - np.sqrt(sum_w2),
                 color=sum_color,
                 lw=0,
                 label="MC"
             )
 
         ax1.errorbar(x=bin_mids, y=hdata, yerr=np.sqrt(hdata),
-                     ls="", marker=".", color=self._data_component.color, label=self._data_component.label)
+                     ls="", marker=".", color="black", label=self._data_component.label)
 
         y_label = self._get_y_label(False, bin_width, evts_or_cand=ylabel)
         # ax1.legend(loc=0, bbox_to_anchor=(1,1))
@@ -614,26 +577,24 @@ class DataMCHistogramPlot(HistogramPlot):
                 ylims = ax1.get_ylim()
                 ax1.set_ylim(ylims[0], 1.4 * ylims[1])
             else:
-                ax1.legend(frameon=True, bbox_to_anchor=(1, 1))
-        
-        if plot_pull:
-            ax2.set_ylabel(r"$\frac{\mathrm{Data - MC}}{\mathrm{Data}}$")
-            ax2.set_xlabel(self._variable.x_label, plot_style.xlabel_pos)
-            ax2.set_ylim((-1, 1))
+                ax1.legend(frameon=False, bbox_to_anchor=(1, 1))
 
-            try:
-                uhdata = unp.uarray(hdata, np.sqrt(hdata))
-                uhmc = unp.uarray(sum_w, np.sqrt(sum_w2))
-                ratio = (uhdata - uhmc) / uhdata
-                ax2.axhline(y=0, color=plot_style.KITColors.dark_grey, alpha=0.8)
-                ax2.errorbar(bin_mids, unp.nominal_values(ratio), yerr=unp.std_devs(ratio),
-                        	ls="", marker=".", color=self._data_component.color)
-            except ZeroDivisionError:
-        	    ax2.axhline(y=0, color=plot_style.KITColors.dark_grey, alpha=0.8)
-       		    plt.subplots_adjust(hspace=0.08)
-        else:
-            ax1.set_xlabel(self._variable.x_label, plot_style.xlabel_pos)
+        ax2.set_ylabel(r"$\frac{\mathrm{Data - MC}}{\mathrm{Data}}$")
+        ax2.set_xlabel(self._variable.x_label, plot_style.xlabel_pos)
+        ax2.set_ylim((-1, 1))
 
+        try:
+            uhdata = unp.uarray(hdata, np.sqrt(hdata))
+            uhmc = unp.uarray(sum_w, np.sqrt(sum_w2))
+            ratio = (uhdata - uhmc) / uhdata
+
+            ax2.axhline(y=0, color=plot_style.KITColors.dark_grey, alpha=0.8)
+            ax2.errorbar(bin_mids, unp.nominal_values(ratio), yerr=unp.std_devs(ratio),
+                         ls="", marker=".", color=plot_style.KITColors.kit_black)
+        except ZeroDivisionError:
+            ax2.axhline(y=0, color=plot_style.KITColors.dark_grey, alpha=0.8)
+
+        plt.subplots_adjust(hspace=0.08)
 
 
 def create_hist_ratio_figure():
