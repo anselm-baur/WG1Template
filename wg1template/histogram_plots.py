@@ -524,6 +524,7 @@ class DataMCHistogramPlot(HistogramPlot):
                 legend_inside: bool = True,
                 plot_pull: bool = False,
                 ):
+
         bin_edges, bin_mids, bin_width = self._get_bin_edges()
 
         self._bin_edges = bin_edges
@@ -624,6 +625,8 @@ class DataMCHistogramPlot(HistogramPlot):
             try:
                 uhdata = unp.uarray(hdata, np.sqrt(hdata))
                 uhmc = unp.uarray(sum_w, np.sqrt(sum_w2))
+                print(uhdata - uhmc)
+                print(uhdata)
                 ratio = (uhdata - uhmc) / uhdata
                 ax2.axhline(y=0, color=plot_style.KITColors.dark_grey, alpha=0.8)
                 ax2.errorbar(bin_mids, unp.nominal_values(ratio), yerr=unp.std_devs(ratio),
@@ -636,12 +639,12 @@ class DataMCHistogramPlot(HistogramPlot):
 
 
 
-def create_hist_ratio_figure():
+def create_hist_ratio_figure(figsize=(5, 5), dpi=200):
     """Create a matplotlib.Figure for histogram ratio plots.
 
     :return: A maptlotlib.Figure instance and a matplotlib.axes instance.
     """
-    return plt.subplots(2, 1, figsize=(5, 5), dpi=200, sharex=True, gridspec_kw={"height_ratios": [3.5, 1]})
+    return plt.subplots(2, 1, figsize=figsize, dpi=dpi, sharex=True, gridspec_kw={"height_ratios": [3.5, 1]})
 
 
 def create_solo_figure(figsize=(5, 5), dpi=200):
