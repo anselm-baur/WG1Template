@@ -543,6 +543,29 @@ class DataMCHistogramPlot(HistogramPlot):
 
 
         if style.lower() == "stacked":
+            ax1.hist(x=[comp.data for comp in self._mc_components['MC']],
+                     bins=bin_edges,
+                     weights=[comp.weights for comp in self._mc_components['MC']],
+                     stacked=True,
+                     edgecolor="black",
+                     lw=0.3,
+                     color=[comp.color for comp in self._mc_components['MC']],
+                     label=[comp.label for comp in self._mc_components['MC']],
+                     histtype='stepfilled'
+                     )
+            ax1.bar(
+                x=bin_mids,
+                height=2 * np.sqrt(sum_w2),
+                width=self.bin_width,
+                bottom=sum_w - np.sqrt(sum_w2),
+                color="grey",
+                hatch="///////",
+                fill=False,
+                lw=0,
+                label="MC stat. unc."
+                )
+
+        if style.lower() == "border":
             for comp in self._mc_components['MC']:
                 if comp.histtype == "": 
                     ax1.hist(x=comp.data,
@@ -591,6 +614,7 @@ class DataMCHistogramPlot(HistogramPlot):
                            lw=0,
                            label=comp.label_uncert
                         )
+
         if style.lower() == "summed":
             ax1.bar(
                 x=bin_mids,
@@ -625,8 +649,8 @@ class DataMCHistogramPlot(HistogramPlot):
             try:
                 uhdata = unp.uarray(hdata, np.sqrt(hdata))
                 uhmc = unp.uarray(sum_w, np.sqrt(sum_w2))
-                print(uhdata - uhmc)
-                print(uhdata)
+                #print(uhdata - uhmc)
+                #print(uhdata)
                 ratio = (uhdata - uhmc) / uhdata
                 ax2.axhline(y=0, color=plot_style.KITColors.dark_grey, alpha=0.8)
                 ax2.errorbar(bin_mids, unp.nominal_values(ratio), yerr=unp.std_devs(ratio),
