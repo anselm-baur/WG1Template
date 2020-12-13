@@ -651,7 +651,11 @@ class DataMCHistogramPlot(HistogramPlot):
                 uhmc = unp.uarray(sum_w, np.sqrt(sum_w2))
                 #print(uhdata - uhmc)
                 #print(uhdata)
-                ratio = (uhdata - uhmc) / uhdata
+                avoid_zero_div = (uhdata > 0) & (np.abs(uhdata - uhmc) > 0)
+                uhdata = uhdata[avoid_zero_div]
+                uhmc   = uhmc[avoid_zero_div]
+                bin_mids = bin_mids[avoid_zero_div]
+                ratio  = (uhdata - uhmc) / uhdata
                 ax2.axhline(y=0, color=plot_style.KITColors.dark_grey, alpha=0.8)
                 ax2.errorbar(bin_mids, unp.nominal_values(ratio), yerr=unp.std_devs(ratio),
                         	ls="", marker=".", color=self._data_component.color)
