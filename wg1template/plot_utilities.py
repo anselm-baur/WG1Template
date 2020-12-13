@@ -3,9 +3,11 @@ This module contains utility functions for the plots in plots.py
 """
 
 import os
-from typing import Union, Optional, Tuple, Dict
+from typing import Union, Optional, Tuple, Dict, List
 
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('pdf')
 import numpy as np
 import pandas as pd
 
@@ -14,7 +16,7 @@ def export(
         fig: plt.Figure,
         filename: Union[str, os.fspath],
         target_dir: str = "plots/",
-        file_formats: Tuple[str] = (".pdf", ".png")
+        file_formats: Union[Tuple[str], List[str]] = [".pdf"]
 ) -> None:
     """
     Convenience function for saving a matplotlib figure.
